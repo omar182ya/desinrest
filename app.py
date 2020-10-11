@@ -6,11 +6,24 @@ from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.sql.expression import cast
 from sqlalchemy import func  
 import json
+import configparser
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+hostdb = config['db']['host']
+portdb = config['db']['port']
+db = config['db']['db']
+user = config['db']['user']
+passwd = config['db']['passwd']
+
+hostrest = config['rest']['host']
+portrest = config['rest']['port']
 
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://root:@127.0.0.1:3306/desin' #'mysql+pymysql://<mysql_username>:<mysql_password>@<mysql_host>:<mysql_port>/<mysql_db>'
+app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://{}:{}@{}:{}/{}'.format(user, passwd,hostdb, portdb, db) #'mysql+pymysql://<mysql_username>:<mysql_password>@<mysql_host>:<mysql_port>/<mysql_db>'
 db = SQLAlchemy(app)
 
 class VideosAux:  
@@ -291,7 +304,7 @@ def create_product():
 '''
 if __name__ == "__main__":
     app.debug = False#app.run(debug=True)
-    #app.run(host = '192.168.100.2',port=8081)
+    app.run(host = str(hostrest),port=portrest)
     app.run()
 #WINDOWS
 #set FLASK_APP=app.py
