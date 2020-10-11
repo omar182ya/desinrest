@@ -304,8 +304,9 @@ def create_product():
 '''
 if __name__ == "__main__":
     app.debug = False#app.run(debug=True)
+    #app.run(host = str(hostrest),port=portrest,ssl_context=('cert.pem', 'key.pem'))
     app.run(host = str(hostrest),port=portrest)
-    app.run()
+    #app.run()
 #WINDOWS
 #set FLASK_APP=app.py
 #set FLASK_ENV=development #set FLASK_ENV=production
