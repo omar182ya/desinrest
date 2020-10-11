@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from marshmallow_sqlalchemy import ModelSchema
 from marshmallow import fields
 from sqlalchemy.dialects.mysql import LONGTEXT
+from sqlalchemy.sql.expression import cast
+from sqlalchemy import func  
 import json
 
 app = Flask(__name__)
@@ -10,6 +12,13 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://root:@127.0.0.1:3306/desin' #'mysql+pymysql://<mysql_username>:<mysql_password>@<mysql_host>:<mysql_port>/<mysql_db>'
 db = SQLAlchemy(app)
+
+class VideosAux:  
+    def __init__(self, id, value):  
+        self.id = id  
+        self.value = value 
+    def __str__ (self):
+        return f"VideosAux: {self.id} {self.value}"
 
 class FrequencyWord:  
     def __init__(self, word, frequency):  
@@ -104,6 +113,20 @@ def after_request_func(response):
 def index():
     return "desin"
 
+@app.route('/videos', methods = ['GET'])
+def get_all():
+    get_videos = db.session.query(func.coalesce(Videos.id, '').label('id'), Videos.videoName.label('value')).all()
+    
+    
+    lista = [] 
+    for data in get_videos:
+        print(data[0])
+        lista.append(VideosAux(data[0], data[1]))
+    
+    json_format = json.dumps([ob.__dict__ for ob in lista])
+
+    return make_response(json_format,200)
+
 @app.route('/videos', methods = ['POST'])
 def create_video():
     data = request.get_json()
@@ -127,12 +150,14 @@ def get_palabras_video():
     
     list_word_repeat_ab = []
     list_word_ab = [] 
+
     words = get_video_a.frequencyWordClean.split("|")
     list_video_a = []  
     for word in words:
         if len(word) > 0:
             list_video_a.append(FrequencyWord(word.split(":")[0], word.split(":")[1])) 
             list_word_repeat_ab.append(word.split(":")[0])
+
     words = get_video_b.frequencyWordClean.split("|")
     list_video_b = []  
     for word in words:
@@ -156,11 +181,11 @@ def get_palabras_video():
 
         for wordb in list_video_b:
             if(str(word) == str(wordb.word)):
-                frequencyB = frequencyB + int(worda.frequency)
+                frequencyB = frequencyB + int(wordb.frequency)
 
         list_frequency.append(FrequencyWordCompare(word, frequencyA, frequencyB, (frequencyA+frequencyB)))
 
-    list_frequency.sort(key=lambda x: x.word, reverse=False)
+    #list_frequency.sort(key=lambda x: x.word, reverse=False)
     #for item in list_frequency:
     #    print(item)
 
